@@ -14,64 +14,19 @@ const fetchData = async (searchTerm) => {
     return response.data.Search;
 }
 
-// Get the root element
-const root = document.querySelector('.autocomplete');
-root.innerHTML = `
-    <label><b>Search for a Movie</b></label>
-    <input class="input" />
-    <div class="dropdown">
-        <div class="dropdown-menu">
-            <div class="dropdown-content results"></div>
-        </div>
-    </div>
-`;
-
-// Get input HTML field
-const input = document.querySelector('input');
-const dropdown = document.querySelector('.dropdown');
-const resultsWrapper = document.querySelector('.results');
-
-// As keys are typed call fetchData function
-const onInput = async event => {
-    const movies = await fetchData(event.target.value);
-    
-    if (!movies.length) {
-        dropdown.classList.remove('is-active');
-        return;
-    }
-
-    resultsWrapper.innerHTML = '';
-    dropdown.classList.add('is-active');
-    for (let movie of movies) {
-        const option = document.createElement('a');
-        const imgSrc = movie.Poster === 'N/A' ? '' : movie.Poster;
-
-        option.classList.add('dropdown-item');
-        option.innerHTML = `
-            <img src="${imgSrc}" />
-            ${movie.Title}
-        `;
-        option.addEventListener('click', () => {
-            dropdown.classList.remove('is-active');
-            input.value = movie.Title;
-            onMovieSelect(movie);
-        });
-
-        resultsWrapper.appendChild(option);
-        
-    }
-}
-
-// Event listener for input HTML field
-input.addEventListener('input', debounce(onInput, 500));
-
-// Event listener
-document.addEventListener('click', event => {
-    if (!root.contains(event.target)) {
-        dropdown.classList.remove('is-active');
-    }
+createAutoComplete({
+    root: document.querySelector('.autocomplete')
 });
 
+createAutoComplete({
+    root: document.querySelector('.autocomplete-two')
+});
+
+createAutoComplete({
+    root: document.querySelector('.autocomplete-three')
+});
+
+// Get IMDB id to be used for summary element
 const onMovieSelect = async movie => {
     const response = await axios.get('http://www.omdbapi.com/', {
         params: {
@@ -83,6 +38,7 @@ const onMovieSelect = async movie => {
     document.querySelector('#summary').innerHTML = movieTemplate(response.data);
 }
 
+// Function to render movie details
 const movieTemplate = (movieDetail) => {
     return `
         <article class="media">
@@ -99,5 +55,25 @@ const movieTemplate = (movieDetail) => {
                 </div>
             </div>
         </article>
+        <article class="notification is-primary">
+            <p class="title">${movieDetail.Awards}</p>
+            <p class="subtitle">Awards</p>
+        </article>
+        <article class="notification is-primary">
+            <p class="title">${movieDetail.BoxOffice}</p>
+            <p class="subtitle">Box Office</p>
+        </article>
+        <article class="notification is-primary">
+            <p class="title">${movieDetail.Metascore}</p>
+            <p class="subtitle">Metascore</p>
+        </article>
+        <article class="notification is-primary">
+            <p class="title">${movieDetail.imdbRating}</p>
+            <p class="subtitle">IMDB Rating</p>
+        </article>
+        <article class="notification is-primary">
+            <p class="title">${movieDetail.imdbVotes}</p>
+            <p class="subtitle">IMDB Votes</p>
+        </article> 
     `;
 }
